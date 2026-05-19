@@ -1,6 +1,9 @@
 import http from "http";
 import fs from "fs";
 import path from "path";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const PORT = 8080;
 const MIME_TYPES = {
@@ -16,6 +19,37 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
+  // Support local API proxy for Vercel compatibility
+  if (req.url.startsWith("/api/chat") && req.method === "POST") {
+    let body = "";
+    req.on("data", chunk => { body += chunk; });
+    req.on("end", async () => {
+      const apiKey = process.env.GROQ_API_KEY;
+      if (!apiKey) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "GROQ_API_KEY is not defined in your .env file" }));
+        return;
+      }
+      try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey.trim()}`
+          },
+          body: body
+        });
+        const data = await response.json();
+        res.writeHead(response.status, { "Content-Type": "application/json" });
+        res.end(JSON.stringify(data));
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
   // Normalize request URL path
   let filePath = "." + req.url.split("?")[0];
   if (filePath === "./") {

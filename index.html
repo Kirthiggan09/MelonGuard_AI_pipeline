@@ -400,9 +400,11 @@ Format your response clearly. Use bullet points for chemical lists. Be practical
 const GROQ_API_KEY = (typeof CONFIG !== 'undefined') ? CONFIG.GROQ_API_KEY : ""; 
 
 async function callClaudeAPI(userMessage, imageBase64, imageMime) {
-  const apiKey = GROQ_API_KEY;
-  if (!apiKey || apiKey === "YOUR_GROQ_API_KEY") {
-    showToast("âš ï¸  Please set your Groq API key in the code (GROQ_API_KEY).");
+  const apiKey = (typeof CONFIG !== 'undefined') ? CONFIG.GROQ_API_KEY : "";
+  const useProxy = !apiKey || apiKey === "YOUR_GROQ_API_KEY" || apiKey === "";
+
+  if (useProxy && window.location.protocol === "file:") {
+    showToast("⚠️ Sila tetapkan API key anda dalam config.js jika menjalankan fail HTML secara terus.");
     return null;
   }
 
@@ -436,13 +438,16 @@ async function callClaudeAPI(userMessage, imageBase64, imageMime) {
     ]
   };
 
+  const url = useProxy ? "/api/chat" : "https://api.groq.com/openai/v1/chat/completions";
+  const headers = { "Content-Type": "application/json" };
+  if (!useProxy) {
+    headers["Authorization"] = `Bearer ${apiKey}`;
+  }
+
   try {
-    const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const resp = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
+      headers: headers,
       body: JSON.stringify(body)
     });
 
