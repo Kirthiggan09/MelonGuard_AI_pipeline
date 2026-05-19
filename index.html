@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MelonGuard AI — Penasihat Penyakit Tembikai Susu</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+    color: #333;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app-container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: relative;
+    background: #fff;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+  }
+
+  @media (min-width: 800px) {
+    .app-container {
+      height: 95vh;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid #e0e0e0;
+    }
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 24px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #1B5E20, #43A047);
+    color: #fff;
+  }
+  header h1 { font-size: 20px; font-weight: 600; color: #fff; letter-spacing: -0.5px; }
+  header p  { font-size: 13px; color: #c8e6c9; margin-top: 6px; }
+
+  /* ── Shortcut disease buttons ── */
+  .shortcuts {
+    padding: 16px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    flex-shrink: 0;
+    background: #fdfdfd;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .sc-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+    border: none;
+    border-radius: 20px;
+    background: #e8f5e9;
+    color: #1B5E20;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .sc-btn:hover { background: #c8e6c9; transform: translateY(-1px); }
+
+  /* ── Chat area ── */
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: #fafafa;
+  }
+
+  /* ── Messages ── */
+  .msg-row { display: flex; flex-direction: column; max-width: 85%; }
+  .msg-row.user { align-self: flex-end; align-items: flex-end; }
+  .msg-row.bot  { align-self: flex-start; align-items: flex-start; }
+
+  .msg-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #888;
+    margin-bottom: 6px;
+    margin-left: 2px;
+  }
+  .msg-row.user .msg-label { display: none; }
+
+  .bubble {
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 14px 18px;
+    border-radius: 18px;
+    word-wrap: break-word;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+  }
+  
+  .msg-row.bot .bubble {
+    background: #fff8e1; /* Pale melon inside */
+    color: #3e2723;
+    border: 1px solid #ffe082;
+    border-bottom-left-radius: 4px;
+  }
+  
+  .msg-row.user .bubble {
+    background: linear-gradient(135deg, #43A047, #1B5E20);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 10px rgba(67, 160, 71, 0.2);
+    white-space: pre-wrap; /* Preserve line breaks for user text */
+  }
+
+  .bubble strong { font-weight: 600; }
+  .bubble ul { padding-left: 20px; margin: 8px 0; }
+  .bubble li  { margin-bottom: 6px; }
+  .bubble h3, .bubble h4 { margin: 12px 0 6px; font-weight: 600; }
+
+  /* ── Typing indicator ── */
+  .typing-bubble {
+    display: flex !important;
+    align-items: center;
+    gap: 4px;
+    padding: 16px 20px !important;
+    min-height: 42px;
+  }
+  .typing-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #FF8F00; /* Vibrant melon orange */
+    animation: typingBounce 1.4s infinite ease-in-out both;
+  }
+  .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+  .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+  
+  @keyframes typingBounce {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  /* ── Image preview ── */
+  #img-preview-area {
+    display: none;
+    padding: 12px 20px 0;
+    flex-shrink: 0;
+    background: #fff;
+  }
+  #img-preview-wrap { position: relative; display: inline-block; }
+  #img-preview { height: 60px; width: 60px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  #img-clear {
+    position: absolute; top: -6px; right: -6px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #e53935; color: #fff;
+    border: none; cursor: pointer;
+    font-size: 10px; line-height: 20px; text-align: center;
+  }
+
+  /* ── Input row ── */
+  .input-row {
+    padding: 16px 20px 24px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-shrink: 0;
+    background: #fff;
+    border-top: 1px solid #f0f0f0;
+  }
+  
+  .input-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    background: #f4f6f8;
+    border-radius: 24px;
+    padding: 4px 6px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  .input-wrapper:focus-within { background: #fff; border-color: #43A047; box-shadow: 0 0 0 3px rgba(67, 160, 71, 0.1); }
+
+  #photo-btn {
+    padding: 10px;
+    color: #666;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s, color 0.2s;
+  }
+  #photo-btn:hover { background: rgba(67, 160, 71, 0.1); color: #2E7D32; }
+  
+  #img-badge {
+    display: none;
+    width: 8px; height: 8px;
+    background: #F57C00; border-radius: 50%;
+    position: absolute; top: 6px; right: 6px;
+    border: 2px solid #fff;
+  }
+  .photo-wrap { position: relative; display: flex; align-items: center; }
+  
+  #chat-input {
+    flex: 1;
+    font-size: 15px;
+    font-family: inherit;
+    padding: 12px 14px;
+    background: transparent;
+    border: none;
+    resize: none;
+    min-height: 44px;
+    max-height: 120px;
+    line-height: 1.5;
+    overflow-y: auto;
+    color: #111;
+  }
+  #chat-input:focus { outline: none; }
+  #chat-input::placeholder { color: #aaa; }
+  
+  #send-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FF8F00, #F57C00); /* Vibrant Melon Orange */
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    margin: 3px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 10px rgba(245, 124, 0, 0.3);
+  }
+  #send-btn:hover   { transform: scale(1.05); }
+  #send-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; transform: none; }
+  #file-input { display: none; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #333; color: #fff;
+    padding: 12px 20px;
+    border-radius: 30px;
+    font-size: 13px;
+    display: none;
+    z-index: 200;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-thumb { background: #cfd8dc; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #b0bec5; }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- Header -->
+  <header>
+    <h1>🍈 MelonGuard AI — Penasihat Penyakit</h1>
+    <p>Tanya soalan tentang penyakit pokok tembikai susu. (BM/EN)</p>
+  </header>
+
+  <!-- Shortcut disease buttons -->
+  <div class="shortcuts">
+    <button class="sc-btn" onclick="quickDisease('leaf borer or miner')">Ulat Pelombong Daun</button>
+    <button class="sc-btn" onclick="quickDisease('downy mildew with yellow angular spots')">Embun Perosak</button>
+    <button class="sc-btn" onclick="quickDisease('powdery mildew')">Embun Tepung</button>
+    <button class="sc-btn" onclick="quickSend('Apakah racun yang boleh saya beli di Malaysia untuk merawat penyakit ini?')">Cadangan Racun</button>
+    <button class="sc-btn" onclick="quickSend('Bagi saya jadual spray untuk 30 hari')">Jadual Spray</button>
+  </div>
+
+  <!-- Chat messages -->
+  <div id="messages">
+    <!-- Welcome -->
+    <div class="msg-row bot">
+      <div class="msg-label">MelonGuard AI</div>
+      <div class="bubble">
+        <strong>Selamat datang! 🌱</strong><br><br>
+        Saya boleh bantu anda:
+        <ul>
+          <li>Kenal pasti penyakit daripada simptom daun</li>
+          <li>Cadangkan racun dan dos yang betul</li>
+          <li>Buat jadual spray rawatan</li>
+          <li>Nasihat cara pencegahan untuk ladang anda</li>
+          <li>Analisa gambar daun yang anda upload</li>
+        </ul>
+        <br>
+        Huraikan simptom anda, atau upload gambar daun untuk bermula.
+      </div>
+    </div>
+  </div>
+
+  <!-- Image preview -->
+  <div id="img-preview-area">
+    <div id="img-preview-wrap">
+      <img id="img-preview" src="" alt="Gambar daun">
+      <button id="img-clear" onclick="clearImage()" title="Buang gambar">✕</button>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-row">
+    <div class="input-wrapper">
+      <div class="photo-wrap">
+        <label id="photo-btn" for="file-input" title="Upload gambar daun">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          <span id="img-badge"></span>
+        </label>
+      </div>
+      <input type="file" id="file-input" accept="image/*" onchange="handleImageUpload(event)">
+      <textarea id="chat-input"
+        placeholder="Tulis simptom anda di sini..."
+        rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button id="send-btn" onclick="sendMessage()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      </button>
+    </div>
+  </div>
+
+</div> <!-- end app-container -->
+
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script src="rag_docs.js"></script>
+<script>
+
+
+// State
+let pendingImage = null;     // base64 image data
+let pendingImageType = null; // mime type
+let extraDocs = [];          // user-uploaded docs {name, content}
+let conversationHistory = [];
+let isLoading = false;
+
+
+// Build RAG context string
+function buildRAGContext() {
+  let ctx = "=== ROCK MELON DISEASE KNOWLEDGE BASE ===\n\n";
+  RAG_DOCS.forEach(doc => {
+    ctx += `[DOCUMENT: ${doc.title}]\n${doc.content}\n\n`;
+  });
+  if (extraDocs.length > 0) {
+    ctx += "=== USER-UPLOADED ADDITIONAL DOCUMENTS ===\n\n";
+    extraDocs.forEach(doc => {
+      ctx += `[DOCUMENT: ${doc.name}]\n${doc.content}\n\n`;
+    });
+  }
+  return ctx;
+}
+
+
+function buildSystemPrompt() {
+  return `You are MelonGuard AI, a specialised agricultural chatbot for rock melon (Cucumis melo) disease diagnosis and management. You serve farmers in Malaysia and Southeast Asia.
+
+You have access to a curated knowledge base of rock melon diseases, chemicals, and treatment protocols. Always base your answers on this knowledge base first.
+
+${buildRAGContext()}
+
+=== YOUR BEHAVIOUR ===
+CRITICAL RESTRICTION: You are STRICTLY limited to diagnosing and discussing ONLY these three specific issues:
+1. Leaf borer/miner (Ulat pelombong daun / Ulat ratus)
+2. Downy mildew (Embun perosak)
+3. Powdery mildew (Embun tepung)
+If a farmer asks about ANY other disease or pest (e.g. Fusarium wilt, Anthracnose, viruses), politely inform them that this version of MelonGuard AI is exclusively focused on Leaf borers/miners, Downy mildew, and Powdery mildew. Do not provide diagnosis or treatment for unsupported diseases.
+
+1. DIAGNOSE: When a farmer describes symptoms, identify which of the 3 supported issues it is. If multiple match, explain the differences.
+2. CHEMICALS: Always provide specific chemical product names, active ingredients, concentrations, and dosages. Include products available in Malaysia.
+3. SPRAY SCHEDULE: Provide a clear schedule â€” how often, when to apply, how long to treat.
+4. SAFETY: Always mention pre-harvest intervals (PHI) and basic safety precautions.
+5. IMAGES: If an image is provided, describe what you see and diagnose based on visual symptoms.
+6. LANGUAGE: Respond in the same language the farmer uses. Support Bahasa Malaysia and English. You may include Bahasa Malaysia terms in parentheses.
+7. URGENCY: If disease is severe (Fusarium wilt, Downy mildew at late stage), clearly state it is URGENT.
+8. DISCLAIMER: At the end of detailed diagnosis, add a brief note to consult a local agricultural officer (Jabatan Pertanian Malaysia) for confirmation.
+
+Format your response clearly. Use bullet points for chemical lists. Be practical and actionable â€” farmers need to act fast.`;
+}
+
+
+// Send message to Groq API
+
+const GROQ_API_KEY = (typeof CONFIG !== 'undefined') ? CONFIG.GROQ_API_KEY : ""; 
+
+async function callClaudeAPI(userMessage, imageBase64, imageMime) {
+  const apiKey = GROQ_API_KEY;
+  if (!apiKey || apiKey === "YOUR_GROQ_API_KEY") {
+    showToast("âš ï¸  Please set your Groq API key in the code (GROQ_API_KEY).");
+    return null;
+  }
+
+  // Build message content
+  let content;
+  if (imageBase64) {
+    content = [
+      {
+        type: "text",
+        text: userMessage || "Please diagnose the disease shown in this rock melon leaf photo. Identify the disease, explain its severity, and recommend the chemicals and treatment protocol."
+      },
+      {
+        type: "image_url",
+        image_url: {
+          url: `data:${imageMime};base64,${imageBase64}`
+        }
+      }
+    ];
+  } else {
+    content = userMessage || "";
+  }
+
+  // Add to history
+  conversationHistory.push({ role: "user", content: content });
+
+  const body = {
+    model: imageBase64 ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile",
+    messages: [
+      { role: "system", content: buildSystemPrompt() },
+      ...conversationHistory
+    ]
+  };
+
+  try {
+    const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      showToast(`API Error: ${err.error?.message || resp.statusText}`);
+      conversationHistory.pop();
+      return null;
+    }
+
+    const data = await resp.json();
+    const assistantText = data.choices[0].message.content || "";
+    conversationHistory.push({ role: "assistant", content: assistantText });
+    return assistantText;
+
+  } catch (e) {
+    showToast("Network error â€” check your connection and API key.");
+    conversationHistory.pop();
+    return null;
+  }
+}
+
+// Render response
+function renderBotMessage(text) {
+  // Simple markdown-like rendering
+  let html = text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/^###\s+(.+)$/gm, '<h4 style="font-size:13px;font-weight:600;margin:8px 0 4px;color:var(--green-dark)">$1</h4>')
+    .replace(/^##\s+(.+)$/gm, '<h3 style="font-size:14px;font-weight:600;margin:10px 0 5px;color:var(--green-dark)">$1</h3>')
+    .replace(/^#\s+(.+)$/gm, '<h3 style="font-size:15px;font-weight:600;margin:10px 0 5px;color:var(--green-dark)">$1</h3>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+    .replace(/\n{2,}/g, '</p><p style="margin-top:8px">')
+    .replace(/\n/g, '<br>');
+
+  // Wrap in paragraph
+  html = `<p>${html}</p>`;
+  return html;
+}
+
+
+// Add message to DOM
+
+function addMessage(role, content, isHTML) {
+  const msgs = document.getElementById('messages');
+  const row = document.createElement('div');
+  row.className = `msg-row ${role}`;
+
+  const label = document.createElement('div');
+  label.className = 'msg-label';
+  label.textContent = role === 'bot' ? 'MelonGuard AI' : 'Anda';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  if (isHTML) bubble.innerHTML = content;
+  else bubble.textContent = content;
+
+  row.appendChild(label);
+  row.appendChild(bubble);
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const row = document.createElement('div');
+  row.id = 'typing-wrap';
+  row.className = 'msg-row bot';
+  row.innerHTML = `
+    <div class="msg-label">MelonGuard AI</div>
+    <div class="bubble typing-bubble">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+  `;
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-wrap');
+  if (t) t.remove();
+}
+
+
+// Send
+
+async function sendMessage() {
+  if (isLoading) return;
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text && !pendingImage) return;
+
+  const displayText = text || 'ðŸ“· Uploaded a photo of my rock melon leaf for diagnosis.';
+  addMessage('user', displayText, false);
+  input.value = '';
+  input.style.height = 'auto';
+
+  const imgData = pendingImage;
+  const imgMime = pendingImageType;
+  clearImage();
+
+  isLoading = true;
+  document.getElementById('send-btn').disabled = true;
+  showTyping();
+
+  const reply = await callClaudeAPI(text || null, imgData, imgMime);
+  removeTyping();
+
+  if (reply) {
+    addMessage('bot', renderBotMessage(reply), true);
+  }
+
+  isLoading = false;
+  document.getElementById('send-btn').disabled = false;
+  document.getElementById('messages').scrollTop = 99999;
+}
+ 
+// Helpers
+ function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function quickSend(msg) {
+  document.getElementById('chat-input').value = msg;
+  sendMessage();
+}
+
+function quickDisease(msg) {
+  document.getElementById('chat-input').value = `I see symptoms of ${msg} on my rock melon. Please diagnose, give me the treatment, chemicals to use with dosage, and spray schedule.`;
+  sendMessage();
+}
+
+function handleImageUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const full = ev.target.result;
+    const comma = full.indexOf(',');
+    pendingImage = full.substring(comma + 1);
+    pendingImageType = file.type;
+    document.getElementById('img-preview').src = full;
+    document.getElementById('img-preview-area').style.display = 'block';
+    document.getElementById('img-badge').style.display = 'block';
+    document.getElementById('chat-input').placeholder = 'Add a description, or just press send to diagnose...';
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function clearImage() {
+  pendingImage = null;
+  pendingImageType = null;
+  document.getElementById('img-preview-area').style.display = 'none';
+  document.getElementById('img-badge').style.display = 'none';
+  document.getElementById('chat-input').placeholder = 'Describe your leaf symptoms, or ask anything about rock melon disease...';
+}
+
+function handleDocUpload(e) {
+  const files = Array.from(e.target.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      extraDocs.push({ name: file.name, content: ev.target.result });
+      renderDocList();
+    };
+    reader.readAsText(file);
+  });
+  e.target.value = '';
+}
+
+function renderDocList() {
+  const list = document.getElementById('doc-list');
+  list.innerHTML = extraDocs.map((d, i) => `
+    <div class="doc-item">
+      ðŸ“„ <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name}</span>
+      <span class="doc-remove" onclick="removeDoc(${i})">âœ•</span>
+    </div>`).join('');
+}
+
+function removeDoc(i) {
+  extraDocs.splice(i, 1);
+  renderDocList();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+</script>
+</body>
+</html>

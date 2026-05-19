@@ -1,0 +1,13 @@
+{
+  "name": "project",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@langchain/community": "0.2.10",
+    "@langchain/openai": "0.2.6",
+    "dotenv": "^17.4.2",
+    "langchain": "0.2.11",
+    "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^5.7.284"
+  }
+}
