@@ -262,6 +262,22 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   }
 
+  /* ── Tabs ── */
+  .tabs { display: flex; background: #fff; border-bottom: 1px solid #e0e0e0; flex-shrink: 0; }
+  .tab-btn { flex: 1; padding: 14px; border: none; background: #fafafa; font-weight: 600; cursor: pointer; color: #666; font-size: 14px; transition: 0.2s; }
+  .tab-btn:hover { background: #f0f0f0; }
+  .tab-btn.active { background: #fff; color: #1B5E20; border-bottom: 3px solid #1B5E20; }
+  
+  /* ── Camera Tab ── */
+  #tab-camera { flex: 1; overflow-y: auto; background: #fafafa; padding: 20px; display: none; flex-direction: column; gap: 20px; }
+  #live-video { width: 100%; border-radius: 12px; background: #000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); object-fit: contain; min-height: 200px; border: 2px solid #ddd; }
+  .alert-card { background: #fff; border-left: 4px solid #e53935; padding: 14px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .alert-card h4 { color: #d32f2f; margin-bottom: 6px; font-size: 15px; display: flex; justify-content: space-between; }
+  .alert-card p { font-size: 13px; color: #555; margin-bottom: 4px; }
+  .alert-meta { font-size: 11px; color: #999; }
+  #alert-list { display: flex; flex-direction: column; gap: 10px; }
+  #tab-chat { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
   /* ── Scrollbar ── */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-thumb { background: #cfd8dc; border-radius: 3px; }
@@ -278,7 +294,14 @@
     <p>Tanya soalan tentang penyakit rock melon. (BM/EN)</p>
   </header>
 
-  <!-- Shortcut disease buttons -->
+  <!-- Tabs -->
+  <div class="tabs">
+    <button id="btn-chat" class="tab-btn active" onclick="switchTab('chat')">💬 AI Chatbot</button>
+    <button id="btn-camera" class="tab-btn" onclick="switchTab('camera')">📹 Live Camera & Alerts</button>
+  </div>
+
+  <div id="tab-chat">
+    <!-- Shortcut disease buttons -->
   <div class="shortcuts">
     <button class="sc-btn" onclick="quickDisease('leaf borer or miner')">Ulat Pelombong Daun</button>
     <button class="sc-btn" onclick="quickDisease('downy mildew with yellow angular spots')">Embun Perosak</button>
@@ -332,6 +355,25 @@
       <button id="send-btn" onclick="sendMessage()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
       </button>
+    </div>
+  </div>
+
+    </div>
+  </div>
+  </div> <!-- end tab-chat -->
+
+  <div id="tab-camera">
+    <div style="text-align: center; margin-bottom: -10px;">
+      <h3 style="color: #333; font-size: 16px;">Live Rail Camera Feed</h3>
+      <p style="font-size: 12px; color: #777;">Streaming from Python CV Pipeline</p>
+    </div>
+    <img id="live-video" src="http://localhost:5000/video_feed" alt="Live Camera Feed Not Connected" onerror="this.alt='Pipeline Server (port 5000) not running.'">
+    
+    <div>
+      <h3 style="color: #333; font-size: 16px; margin-bottom: 12px; border-bottom: 1px solid #ddd; padding-bottom: 8px;">🚨 Real-time AI Alerts</h3>
+      <div id="alert-list">
+        <p style="font-size: 13px; color: #777; text-align: center; padding: 20px;">No alerts yet. System is monitoring...</p>
+      </div>
     </div>
   </div>
 
@@ -648,6 +690,54 @@ function showToast(msg) {
   t.style.display = 'block';
   setTimeout(() => { t.style.display = 'none'; }, 4000);
 }
+
+// Tab Switching
+function switchTab(tabId) {
+  document.getElementById('btn-chat').classList.toggle('active', tabId === 'chat');
+  document.getElementById('btn-camera').classList.toggle('active', tabId === 'camera');
+  document.getElementById('tab-chat').style.display = tabId === 'chat' ? 'flex' : 'none';
+  document.getElementById('tab-camera').style.display = tabId === 'camera' ? 'flex' : 'none';
+}
+
+// Alert Polling
+let lastAlertCount = 0;
+async function fetchAlerts() {
+  try {
+    const res = await fetch('http://localhost:5000/api/alerts');
+    if (!res.ok) return;
+    const data = await res.json();
+    
+    if (data.status === 'success' && data.count !== lastAlertCount) {
+      lastAlertCount = data.count;
+      const list = document.getElementById('alert-list');
+      
+      if (data.alerts.length === 0) {
+        list.innerHTML = '<p style="font-size: 13px; color: #777; text-align: center; padding: 20px;">No alerts yet. System is monitoring...</p>';
+        return;
+      }
+      
+      list.innerHTML = data.alerts.map(a => `
+        <div class="alert-card">
+          <h4><span>${a.detected_disease}</span> <span>${(a.confidence_percentage).toFixed(1)}%</span></h4>
+          <p>${a.symptom_description}</p>
+          <div class="alert-meta">
+            Pos: ${a.rail_position_id} | Frame: ${a.frame_id} | Time: ${new Date(a.timestamp).toLocaleTimeString()}
+          </div>
+        </div>
+      `).join('');
+      
+      // Auto-switch to camera tab if a new alert comes in and we are not on it
+      if (document.getElementById('tab-camera').style.display === 'none') {
+        showToast(`🚨 New Disease Detected: ${data.alerts[0].detected_disease}!`);
+      }
+    }
+  } catch (e) {
+    // silently fail if python server is down
+  }
+}
+
+// Poll every 2 seconds
+setInterval(fetchAlerts, 2000);
 </script>
 </body>
 </html>
