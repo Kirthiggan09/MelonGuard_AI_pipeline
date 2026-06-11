@@ -249,6 +249,11 @@ class VideoStreamCapture:
 
             ret, frame = self._cap.read()
             if not ret:
+                # If it's a local video file, loop it
+                if isinstance(self.source, str) and not self._is_rtsp and Path(self.source).is_file():
+                    self._cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    continue
+                
                 consecutive_failures += 1
                 if consecutive_failures > 30:
                     log.warning("Too many consecutive read failures — attempting reconnect")
@@ -262,6 +267,10 @@ class VideoStreamCapture:
             self._frame_count += 1
             with self._lock:
                 self._frame = frame
+            
+            # If playing a video file, pace it to ~30 FPS to avoid reading too fast
+            if isinstance(self.source, str) and not self._is_rtsp and Path(self.source).is_file():
+                time.sleep(1.0 / 30.0)
 
         log.info("Video reader thread stopped.")
 
