@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const PORT = 8080;
+const PORT = 8081;
 const MIME_TYPES = {
   ".html": "text/html",
   ".css": "text/css",

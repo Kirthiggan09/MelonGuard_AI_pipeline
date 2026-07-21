@@ -63,12 +63,13 @@ OUTPUT_DIR = SCRIPT_DIR / "detection_results"
 ALERT_DIR  = SCRIPT_DIR / "alerts"
 
 # ── Inference defaults ──────────────────────────────────────────────────────
-CONF_THRESHOLD   = 0.75      # §5: 75% minimum confidence to register a detection
+CONF_THRESHOLD   = 0.50      # Increased slightly to suppress weak background artifacts
 IMG_SIZE         = 640       # YOLO inference resolution
 INTERNAL_CONF    = 0.10      # low internal threshold; we filter at display/alert level
+MIN_BBOX_AREA    = 3500      # Minimum bounding box area in pixels to suppress false positives
 
 # ── Video capture defaults ──────────────────────────────────────────────────
-DEFAULT_SOURCE      = "0"                  # webcam index or RTSP URL
+DEFAULT_SOURCE      = "1"                  # 1 for external USB camera (0 is built-in webcam)
 TARGET_WIDTH        = 1920                 # request 1080p
 TARGET_HEIGHT       = 1080
 RECONNECT_ATTEMPTS  = 10
@@ -84,7 +85,7 @@ CLASS_DISPLAY = {
     1: ("Fungus",     "Bluish flour-like dust + opposite yellow dots (sporangia)"),
     2: ("Leaf Miner", "Light green to white squiggly trails / feeding tunnels"),
     3: ("Normal",     "Healthy green leaves — no chlorosis or structural curling"),
-    4: ("Unknown",    "Anomalous features from chemical / pesticide spray residue"),
+    4: ("Unhealthy",    "Anomalous features from chemical / pesticide spray residue"),
 }
 
 # ── Colour palette per class (BGR) ──────────────────────────────────────────
@@ -93,7 +94,7 @@ CLASS_COLORS = {
     1: (50,  50, 220),   # Fungus      → red
     2: (0,  200, 200),   # Leaf Miner  → yellow
     3: (0,  200,   0),   # Normal      → green
-    4: (200, 150,  0),   # Unknown     → teal
+    4: (200, 150,  0),   # Unhealthy     → teal
 }
 DEFAULT_COLOR = (180, 180, 180)
 
@@ -336,6 +337,11 @@ class InferenceEngine:
             display_name, symptom = CLASS_DISPLAY.get(cls_id, (cls_name, ""))
 
             x1, y1, x2, y2 = box.xyxy[0].cpu().numpy().astype(int)
+
+            # Area-based filtering to suppress false positives (e.g. background noise)
+            bbox_area = (x2 - x1) * (y2 - y1)
+            if bbox_area < MIN_BBOX_AREA:
+                continue
 
             detections.append(Detection(
                 class_id=cls_id,

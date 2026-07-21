@@ -7,7 +7,7 @@ import threading
 from pathlib import Path
 from datetime import datetime, timezone
 
-from flask import Flask, Response, jsonify
+from flask import Flask, Response, jsonify, send_from_directory
 from flask_cors import CORS
 import cv2
 
@@ -27,11 +27,19 @@ from greenhouse_pipeline import (
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes so the Node.js dashboard can access it
 
+# ── Disease Capture Config ──────────────────────────────────────────────────
+SCRIPT_DIR = Path(__file__).resolve().parent
+CAPTURE_DIR = SCRIPT_DIR / "disease_captures"
+CAPTURE_DIR.mkdir(parents=True, exist_ok=True)
+CAPTURE_COOLDOWN_SEC = 5.0    # Minimum seconds between captures
+MAX_CAPTURES = 200            # Keep the folder from growing unbounded
+
 # Global state
 stream = None
 engine = None
 viz = None
 alert_engine = None
+last_capture_time = 0.0       # Timestamp of the last saved capture
 
 # A thread-safe list to hold recent alerts for the dashboard
 recent_alerts = []
@@ -51,6 +59,40 @@ class MemoryAlertEngine(AlertEngine):
                 while len(recent_alerts) > 100:
                     recent_alerts.pop()
         return alerts
+
+def _save_disease_capture(annotated_frame, detections):
+    """Save an annotated frame to the disease_captures folder."""
+    global last_capture_time
+    now = time.time()
+    if now - last_capture_time < CAPTURE_COOLDOWN_SEC:
+        return  # Throttle: skip if we captured recently
+
+    # Build a descriptive filename from the top detection
+    top = max(detections, key=lambda d: d.confidence)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    conf_pct = int(top.confidence * 100)
+    fname = f"{ts}_{top.display_name}_{conf_pct}pct.jpg"
+
+    cv2.imwrite(str(CAPTURE_DIR / fname), annotated_frame)
+    last_capture_time = now
+    log.info(f"📸 Disease capture saved: {fname}")
+
+    # Also save to the external categorized OneDrive folder
+    onedrive_base = Path(r"C:\Users\Kirthiggan\OneDrive\Documents\rockmelon lead disease (pictures)")
+    try:
+        # Create a specific folder for this disease category
+        category_dir = onedrive_base / top.display_name
+        category_dir.mkdir(parents=True, exist_ok=True)
+        cv2.imwrite(str(category_dir / fname), annotated_frame)
+    except Exception as e:
+        log.error(f"Failed to save image to OneDrive categorized folder: {e}")
+
+    # Prune old captures if folder exceeds MAX_CAPTURES
+    captures = sorted(CAPTURE_DIR.glob("*.jpg"), key=os.path.getmtime)
+    while len(captures) > MAX_CAPTURES:
+        oldest = captures.pop(0)
+        oldest.unlink(missing_ok=True)
+
 
 def generate_frames():
     """Generator function that continuously yields MJPEG frames."""
@@ -79,6 +121,11 @@ def generate_frames():
         if stream.frame_count - last_alert_frame >= 15 and detections:
             alert_engine.evaluate(detections, rail_position, stream.frame_count)
             last_alert_frame = stream.frame_count
+
+        # ── Auto-capture disease screenshots ────────────────────────────
+        risk_detections = [d for d in detections if d.is_risk]
+        if risk_detections:
+            _save_disease_capture(frame, risk_detections)
 
         # FPS
         now = time.time()
@@ -129,6 +176,29 @@ def api_status():
         "source": stream.source,
         "frame_count": stream.frame_count
     })
+
+@app.route('/api/captures')
+def api_captures():
+    """Returns a list of saved disease capture filenames (newest first)."""
+    captures = sorted(CAPTURE_DIR.glob("*.jpg"), key=os.path.getmtime, reverse=True)
+    items = []
+    for p in captures[:50]:  # Return up to 50 most recent
+        parts = p.stem.split("_")
+        # Filename format: 20260721_231800_Fungus_89pct.jpg
+        disease = parts[2] if len(parts) >= 4 else "Unknown"
+        conf = parts[3].replace("pct", "%") if len(parts) >= 4 else ""
+        items.append({
+            "filename": p.name,
+            "disease": disease,
+            "confidence": conf,
+            "timestamp": datetime.fromtimestamp(p.stat().st_mtime).isoformat()
+        })
+    return jsonify({"status": "success", "count": len(items), "captures": items})
+
+@app.route('/captures/<path:filename>')
+def serve_capture(filename):
+    """Serve a saved disease capture image."""
+    return send_from_directory(str(CAPTURE_DIR), filename)
 
 def start_pipeline(source=DEFAULT_SOURCE, conf=CONF_THRESHOLD):
     global stream, engine, viz, alert_engine

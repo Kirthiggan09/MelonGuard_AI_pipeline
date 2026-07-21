@@ -33,9 +33,6 @@ def process_video(source_path, output_path, conf_threshold):
             break
             
         frame_count += 1
-        if frame_count > 150:
-            break
-        
         # Inference
         detections, _ = engine.infer(frame)
         total_detections += len(detections)
