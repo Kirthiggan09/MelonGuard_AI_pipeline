@@ -418,6 +418,11 @@
     <p>Tanya soalan tentang penyakit rock melon. (BM/EN)</p>
   </header>
 
+  <!-- Camera Controller Placeholder -->
+  <div id="camera-controller-placeholder" style="background: #e8f5e9; padding: 15px; text-align: center; border-bottom: 2px dashed #81c784; color: #2E7D32; font-size: 14px; font-weight: 600;">
+    [ Space reserved for Camera Controller (Up, Down, Left, Right) ]
+  </div>
+
   <!-- Tabs -->
   <div class="tabs">
     <button id="btn-chat" class="tab-btn active" onclick="switchTab('chat')">💬 AI Chatbot</button>
@@ -588,17 +593,17 @@ If a farmer asks about ANY other disease or pest (e.g. Fusarium wilt, Anthracnos
 7. URGENCY: If disease is severe (Fusarium wilt, Downy mildew at late stage), clearly state it is URGENT.
 8. DISCLAIMER: At the end of detailed diagnosis, add a brief note to consult a local agricultural officer (Jabatan Pertanian Malaysia) for confirmation.
 
-Format your response clearly. Use bullet points for chemical lists. Be practical and actionable â€” farmers need to act fast.`;
+Format your response clearly. Use bullet points for chemical lists. Be practical and actionable — farmers need to act fast.`;
 }
 
 
 // Send message to Groq API
 
-const GROQ_API_KEY = (typeof CONFIG !== 'undefined') ? CONFIG.GROQ_API_KEY : ""; 
+const GEMINI_API_KEY = (typeof CONFIG !== 'undefined') ? CONFIG.GEMINI_API_KEY : ""; 
 
 async function callClaudeAPI(userMessage, imageBase64, imageMime) {
-  const apiKey = (typeof CONFIG !== 'undefined') ? CONFIG.GROQ_API_KEY : "";
-  const useProxy = !apiKey || apiKey === "YOUR_GROQ_API_KEY" || apiKey === "";
+  const apiKey = (typeof CONFIG !== 'undefined') ? CONFIG.GEMINI_API_KEY : "";
+  const useProxy = !apiKey || apiKey === "YOUR_GEMINI_API_KEY" || apiKey === "";
 
   if (useProxy && window.location.protocol === "file:") {
     showToast("⚠️ Sila tetapkan API key anda dalam config.js jika menjalankan fail HTML secara terus.");
@@ -628,14 +633,14 @@ async function callClaudeAPI(userMessage, imageBase64, imageMime) {
   conversationHistory.push({ role: "user", content: content });
 
   const body = {
-    model: imageBase64 ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile",
+    model: "gemini-3.6-flash",
     messages: [
       { role: "system", content: buildSystemPrompt() },
       ...conversationHistory
     ]
   };
 
-  const url = useProxy ? "/api/chat" : "https://api.groq.com/openai/v1/chat/completions";
+  const url = useProxy ? "/api/chat" : "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
   const headers = { "Content-Type": "application/json" };
   if (!useProxy) {
     headers["Authorization"] = `Bearer ${apiKey}`;
