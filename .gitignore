@@ -1,2 +1,8 @@
+venv/
+__pycache__/
+*.mp4
+disease_captures/
+runs/
+yolo_test/
 node_modules/
 .env

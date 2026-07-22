@@ -45,11 +45,27 @@ last_capture_time = 0.0       # Timestamp of the last saved capture
 recent_alerts = []
 alerts_lock = threading.Lock()
 
+# Line Scan tracking state
+scan_active = False
+scan_summary = {}
+scan_lock = threading.Lock()
+
 # Custom AlertEngine wrapper to capture alerts in memory
 class MemoryAlertEngine(AlertEngine):
     def evaluate(self, detections, rail_position, frame_id):
         alerts = super().evaluate(detections, rail_position, frame_id)
         if alerts:
+            global scan_active, scan_summary
+            # Add to scan summary if active
+            with scan_lock:
+                if scan_active:
+                    for a in alerts:
+                        disease = a.detected_disease
+                        if disease not in scan_summary:
+                            scan_summary[disease] = {"count": 0, "total_conf": 0.0}
+                        scan_summary[disease]["count"] += 1
+                        scan_summary[disease]["total_conf"] += a.confidence_percentage
+
             with alerts_lock:
                 for a in alerts:
                     # add to recent alerts list
@@ -194,6 +210,32 @@ def api_captures():
             "timestamp": datetime.fromtimestamp(p.stat().st_mtime).isoformat()
         })
     return jsonify({"status": "success", "count": len(items), "captures": items})
+
+@app.route('/api/scan/start', methods=['POST'])
+def api_scan_start():
+    """Starts tracking a new line scan."""
+    global scan_active, scan_summary
+    with scan_lock:
+        scan_active = True
+        scan_summary = {}
+    return jsonify({"status": "success", "message": "Scan started"})
+
+@app.route('/api/scan/stop', methods=['POST'])
+def api_scan_stop():
+    """Stops tracking and returns the aggregated summary of diseases."""
+    global scan_active, scan_summary
+    with scan_lock:
+        scan_active = False
+        results = []
+        for disease, data in scan_summary.items():
+            count = data["count"]
+            avg_conf = data["total_conf"] / count if count > 0 else 0
+            results.append({
+                "disease": disease,
+                "count": count,
+                "avg_confidence": round(avg_conf, 1)
+            })
+    return jsonify({"status": "success", "summary": results})
 
 @app.route('/captures/<path:filename>')
 def serve_capture(filename):

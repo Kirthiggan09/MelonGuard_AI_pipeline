@@ -1,0 +1,269 @@
+{
+  "2": {
+    "2026-06-10": [
+      {
+        "class": "fungus",
+        "confidence": 0.8792,
+        "timestamp": "2026-06-10T08:36:27.634859+00:00"
+      }
+    ]
+  },
+  "4": {
+    "2026-06-10": [
+      {
+        "class": "fungus",
+        "confidence": 0.8943,
+        "timestamp": "2026-06-10T08:36:29.147801+00:00"
+      }
+    ]
+  },
+  "5": {
+    "2026-06-10": [
+      {
+        "class": "fungus",
+        "confidence": 0.8578,
+        "timestamp": "2026-06-10T08:36:29.667394+00:00"
+      },
+      {
+        "class": "fungus",
+        "confidence": 0.8443,
+        "timestamp": "2026-06-10T08:36:29.667394+00:00"
+      }
+    ]
+  },
+  "7": {
+    "2026-06-10": [
+      {
+        "class": "unknown",
+        "confidence": 0.9407,
+        "timestamp": "2026-06-10T08:36:30.718033+00:00"
+      },
+      {
+        "class": "unknown",
+        "confidence": 0.9009,
+        "timestamp": "2026-06-10T08:36:30.718033+00:00"
+      },
+      {
+        "class": "unknown",
+        "confidence": 0.7628,
+        "timestamp": "2026-06-10T08:36:30.718033+00:00"
+      }
+    ]
+  },
+  "8": {
+    "2026-06-10": [
+      {
+        "class": "unknown",
+        "confidence": 0.8935,
+        "timestamp": "2026-06-10T08:36:31.195595+00:00"
+      },
+      {
+        "class": "unknown",
+        "confidence": 0.8797,
+        "timestamp": "2026-06-10T08:36:31.195595+00:00"
+      },
+      {
+        "class": "unknown",
+        "confidence": 0.8786,
+        "timestamp": "2026-06-10T08:36:31.195595+00:00"
+      },
+      {
+        "class": "unknown",
+        "confidence": 0.8664,
+        "timestamp": "2026-06-10T08:36:31.195595+00:00"
+      },
+      {
+        "class": "unknown",
+        "confidence": 0.8406,
+        "timestamp": "2026-06-10T08:36:31.195595+00:00"
+      }
+    ]
+  },
+  "9": {
+    "2026-06-10": [
+      {
+        "class": "unknown",
+        "confidence": 0.8546,
+        "timestamp": "2026-06-10T08:36:31.645339+00:00"
+      },
+      {
+        "class": "unknown",
+        "confidence": 0.7887,
+        "timestamp": "2026-06-10T08:36:31.645339+00:00"
+      }
+    ]
+  },
+  "10": {
+    "2026-06-10": [
+      {
+        "class": "aphid",
+        "confidence": 0.939,
+        "timestamp": "2026-06-10T08:36:32.092956+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8834,
+        "timestamp": "2026-06-10T08:36:32.092956+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8633,
+        "timestamp": "2026-06-10T08:36:32.092956+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8515,
+        "timestamp": "2026-06-10T08:36:32.092956+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.84,
+        "timestamp": "2026-06-10T08:36:32.092956+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8202,
+        "timestamp": "2026-06-10T08:36:32.092956+00:00"
+      }
+    ]
+  },
+  "11": {
+    "2026-06-10": [
+      {
+        "class": "aphid",
+        "confidence": 0.9317,
+        "timestamp": "2026-06-10T08:36:32.779115+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.9266,
+        "timestamp": "2026-06-10T08:36:32.779115+00:00"
+      },
+      {
+        "class": "unknown",
+        "confidence": 0.9235,
+        "timestamp": "2026-06-10T08:36:32.779115+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.9006,
+        "timestamp": "2026-06-10T08:36:32.779115+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8739,
+        "timestamp": "2026-06-10T08:36:32.779115+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8661,
+        "timestamp": "2026-06-10T08:36:32.779115+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8544,
+        "timestamp": "2026-06-10T08:36:32.779115+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8331,
+        "timestamp": "2026-06-10T08:36:32.779115+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.7508,
+        "timestamp": "2026-06-10T08:36:32.779115+00:00"
+      }
+    ]
+  },
+  "12": {
+    "2026-06-10": [
+      {
+        "class": "aphid",
+        "confidence": 0.9519,
+        "timestamp": "2026-06-10T08:36:34.207421+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8905,
+        "timestamp": "2026-06-10T08:36:34.207421+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8875,
+        "timestamp": "2026-06-10T08:36:34.207421+00:00"
+      },
+      {
+        "class": "unknown",
+        "confidence": 0.8844,
+        "timestamp": "2026-06-10T08:36:34.207421+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8771,
+        "timestamp": "2026-06-10T08:36:34.207421+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8737,
+        "timestamp": "2026-06-10T08:36:34.207421+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8568,
+        "timestamp": "2026-06-10T08:36:34.207421+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8488,
+        "timestamp": "2026-06-10T08:36:34.207421+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8228,
+        "timestamp": "2026-06-10T08:36:34.207421+00:00"
+      }
+    ]
+  },
+  "13": {
+    "2026-06-10": [
+      {
+        "class": "unknown",
+        "confidence": 0.9574,
+        "timestamp": "2026-06-10T08:36:35.503961+00:00"
+      }
+    ]
+  },
+  "14": {
+    "2026-06-10": [
+      {
+        "class": "aphid",
+        "confidence": 0.9427,
+        "timestamp": "2026-06-10T08:36:36.664596+00:00"
+      },
+      {
+        "class": "aphid",
+        "confidence": 0.8976,
+        "timestamp": "2026-06-10T08:36:36.664596+00:00"
+      }
+    ]
+  },
+  "15": {
+    "2026-06-10": [
+      {
+        "class": "leaf miner",
+        "confidence": 0.7976,
+        "timestamp": "2026-06-10T08:36:37.255949+00:00"
+      }
+    ]
+  },
+  "16": {
+    "2026-06-10": [
+      {
+        "class": "leaf miner",
+        "confidence": 0.803,
+        "timestamp": "2026-06-10T08:36:37.691286+00:00"
+      }
+    ]
+  }
+}
