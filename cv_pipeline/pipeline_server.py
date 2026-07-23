@@ -4,12 +4,95 @@ import json
 import time
 import argparse
 import threading
+import queue
+import re
 from pathlib import Path
 from datetime import datetime, timezone
 
-from flask import Flask, Response, jsonify, send_from_directory
+from flask import Flask, Response, jsonify, send_from_directory, request
 from flask_cors import CORS
 import cv2
+import serial
+
+# ---------- Hardware Control Config & State ----------
+DEFAULT_SERIAL = "/dev/ttyTHS1"
+DEFAULT_BAUD = 115200
+DEADZONE_FRAC = 0.25
+
+serial_port = None
+serial_status = "disconnected"
+auto_control = False
+last_command = None
+real_rail_position = 0
+
+send_queue = queue.Queue()
+rail_logs = []
+
+def log_rail(msg):
+    ts = time.strftime('%H:%M:%S')
+    rail_logs.append(f"{ts} {msg}")
+    if len(rail_logs) > 200:
+        rail_logs.pop(0)
+
+def connect_serial(port, baud):
+    global serial_port, serial_status
+    try:
+        serial_port = serial.Serial(port, baud, timeout=0.1)
+        serial_status = f"connected ({port}@{baud})"
+        log_rail(f"Serial connected {port}@{baud}")
+        threading.Thread(target=serial_reader_thread, daemon=True).start()
+        return True
+    except Exception as e:
+        log_rail(f"Serial open error: {e}")
+        return False
+
+def disconnect_serial():
+    global serial_port, serial_status
+    try:
+        if serial_port and serial_port.is_open:
+            serial_port.close()
+    except:
+        pass
+    serial_port = None
+    serial_status = "disconnected"
+    log_rail("Serial disconnected")
+
+def serial_reader_thread():
+    global serial_port, real_rail_position
+    while True:
+        try:
+            if serial_port and serial_port.is_open:
+                if serial_port.in_waiting:
+                    line = serial_port.readline().decode(errors="ignore").strip()
+                    if line:
+                        log_rail(f"<-- {line}")
+                        match = re.search(r'Pos:\s*(\d+)', line)
+                        if match:
+                            real_rail_position = int(match.group(1))
+                else:
+                    time.sleep(0.05)
+            else:
+                time.sleep(0.5)
+        except Exception as e:
+            log_rail(f"[ERR] Serial read error: {e}")
+            time.sleep(0.5)
+
+def send_worker():
+    global last_command
+    while True:
+        try:
+            cmd = send_queue.get(timeout=0.2)
+        except queue.Empty:
+            continue
+        try:
+            if serial_port and serial_port.is_open:
+                serial_port.write((cmd + "\n").encode())
+                log_rail(f"--> {cmd}")
+            else:
+                log_rail(f"(not connected) Would send: {cmd}")
+            last_command = cmd
+        except Exception as e:
+            log_rail(f"[ERR send] {e}")
 
 # Import our pipeline modules
 from greenhouse_pipeline import (
@@ -112,9 +195,8 @@ def _save_disease_capture(annotated_frame, detections):
 
 def generate_frames():
     """Generator function that continuously yields MJPEG frames."""
-    global stream, engine, viz, alert_engine
+    global stream, engine, viz, alert_engine, real_rail_position, auto_control
     
-    rail_position = 0
     fps = 0.0
     prev_time = time.time()
     last_alert_frame = -15
@@ -126,16 +208,27 @@ def generate_frames():
             time.sleep(0.05)
             continue
 
-        # Auto-increment rail position (simulated)
-        if stream.frame_count % 30 == 0:
-            rail_position += 1
-
         # Inference
         detections, _ = engine.infer(frame)
 
+        # Auto control based on detections
+        if auto_control and detections:
+            best = max(detections, key=lambda d: d.confidence)
+            frame_w = frame.shape[1]
+            cx = int((best.box[0] + best.box[2]) / 2)
+            left_thresh = frame_w * (0.5 - DEADZONE_FRAC / 2)
+            right_thresh = frame_w * (0.5 + DEADZONE_FRAC / 2)
+            
+            # Send centering command every 5 frames to avoid flooding
+            if stream.frame_count % 5 == 0:
+                if cx < left_thresh:
+                    send_queue.put('l')
+                elif cx > right_thresh:
+                    send_queue.put('r')
+
         # Alerts (throttle: only evaluate every 15 frames)
         if stream.frame_count - last_alert_frame >= 15 and detections:
-            alert_engine.evaluate(detections, rail_position, stream.frame_count)
+            alert_engine.evaluate(detections, real_rail_position, stream.frame_count)
             last_alert_frame = stream.frame_count
 
         # ── Auto-capture disease screenshots ────────────────────────────
@@ -153,7 +246,7 @@ def generate_frames():
             frame, detections,
             fps=fps,
             conf_threshold=conf_threshold,
-            rail_position=rail_position,
+            rail_position=real_rail_position,
             paused=False,
         )
 
@@ -242,6 +335,44 @@ def serve_capture(filename):
     """Serve a saved disease capture image."""
     return send_from_directory(str(CAPTURE_DIR), filename)
 
+@app.route('/api/hardware/status')
+def api_hardware_status():
+    return jsonify({
+        'serial_status': serial_status,
+        'auto_control': auto_control,
+        'last_command': last_command,
+        'real_rail_position': real_rail_position,
+        'rail_logs': rail_logs[-20:]
+    })
+
+@app.route('/api/hardware/connect', methods=['POST'])
+def api_hardware_connect():
+    data = request.json
+    port = data.get('port', DEFAULT_SERIAL)
+    baud = int(data.get('baud', DEFAULT_BAUD))
+    success = connect_serial(port, baud)
+    return jsonify({'success': success})
+
+@app.route('/api/hardware/disconnect', methods=['POST'])
+def api_hardware_disconnect():
+    disconnect_serial()
+    return jsonify({'success': True})
+
+@app.route('/api/hardware/send', methods=['POST'])
+def api_hardware_send():
+    data = request.json
+    cmd = data.get('cmd')
+    if cmd:
+        send_queue.put(cmd)
+    return jsonify({'success': True})
+
+@app.route('/api/hardware/toggle_auto', methods=['POST'])
+def api_hardware_toggle_auto():
+    global auto_control
+    auto_control = not auto_control
+    log_rail(f"Auto control {'ENABLED' if auto_control else 'DISABLED'}")
+    return jsonify({'success': True, 'auto_control': auto_control})
+
 def start_pipeline(source=DEFAULT_SOURCE, conf=CONF_THRESHOLD):
     global stream, engine, viz, alert_engine
     
@@ -256,6 +387,7 @@ def start_pipeline(source=DEFAULT_SOURCE, conf=CONF_THRESHOLD):
         log.error("Failed to start video stream.")
         sys.exit(1)
         
+    threading.Thread(target=send_worker, daemon=True).start()
     log.info("Pipeline started successfully.")
 
 if __name__ == '__main__':

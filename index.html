@@ -41,7 +41,7 @@
 
   /* ── Header ── */
   header {
-    padding: 24px 20px 20px;
+    padding: 10px 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -50,8 +50,8 @@
     background: linear-gradient(135deg, #1B5E20, #43A047);
     color: #fff;
   }
-  header h1 { font-size: 20px; font-weight: 600; color: #fff; letter-spacing: -0.5px; }
-  header p  { font-size: 13px; color: #c8e6c9; margin-top: 6px; }
+  header h1 { font-size: 16px; font-weight: 600; color: #fff; letter-spacing: -0.5px; }
+  header p  { font-size: 11px; color: #c8e6c9; margin-top: 2px; }
 
   /* ── Shortcut disease buttons ── */
   .shortcuts {
@@ -402,6 +402,41 @@
     border: 2px solid #fff;
   }
 
+  /* ── Hardware Panel ── */
+  .hw-panel { background: #e8f5e9; border-bottom: 1px solid #c8e6c9; display: flex; flex-direction: column; }
+  .hw-topbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #c8e6c9; font-size: 13px; }
+  .hw-port-group { display: flex; align-items: center; gap: 8px; }
+  .hw-port-group input, .hw-port-group select { padding: 4px 6px; border: 1px solid #a5d6a7; border-radius: 4px; font-size: 13px; }
+  .hw-btn { padding: 4px 10px; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 12px; }
+  .hw-btn.connect { background: #2E7D32; color: #fff; }
+  .hw-btn.connect:hover { background: #1B5E20; }
+  .hw-btn.disconnect { background: #d32f2f; color: #fff; }
+  .hw-btn.disconnect:hover { background: #b71c1c; }
+  .hw-status-group { display: flex; align-items: center; gap: 6px; font-weight: 600; color: #333; }
+  .hw-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .hw-dot.red { background: #e53935; box-shadow: 0 0 4px #e53935; }
+  .hw-dot.green { background: #43A047; box-shadow: 0 0 6px #43A047; }
+  .hw-controls-wrap { display: flex; padding: 15px 20px; gap: 20px; justify-content: space-between; flex-wrap: wrap; }
+  .hw-controls, .hw-speed, .hw-log-section { flex: 1; min-width: 200px; }
+  .hw-controls h4, .hw-speed h4, .hw-log-section h4 { color: #2E7D32; font-size: 13px; margin-bottom: 10px; border-bottom: 1px solid #a5d6a7; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+  .hw-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .hw-action-btn { background: #fff; border: 1px solid #81c784; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #1B5E20; transition: 0.2s; }
+  .hw-action-btn:hover { background: #c8e6c9; }
+  .hw-action-btn:active { background: #a5d6a7; }
+  .hw-speed input[type=range] { width: 100%; margin: 10px 0 15px; }
+  .hw-action-btn.speed-btn { width: 100%; background: #43A047; color: #fff; border: none; }
+  .hw-action-btn.speed-btn:hover { background: #2E7D32; }
+  .hw-log { background: #1e1e1e; color: #00ff00; font-family: monospace; font-size: 11px; padding: 8px; height: 90px; overflow-y: auto; border-radius: 4px; border: 1px solid #000; }
+  .hw-clear-btn { background: #f44336; color: white; border: none; border-radius: 4px; font-size: 10px; padding: 2px 6px; cursor: pointer; }
+  .hw-clear-btn:hover { background: #d32f2f; }
+  /* Toggle Switch */
+  .hw-toggle { position: relative; display: inline-block; width: 40px; height: 20px; vertical-align: middle; }
+  .hw-toggle input { opacity: 0; width: 0; height: 0; }
+  .hw-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+  .hw-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+  .hw-toggle input:checked + .hw-slider { background-color: #4CAF50; }
+  .hw-toggle input:checked + .hw-slider:before { transform: translateX(20px); }
+
   /* ── Scrollbar ── */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-thumb { background: #cfd8dc; border-radius: 3px; }
@@ -414,127 +449,179 @@
 
   <!-- Header -->
   <header>
-    <h1>🍈 MelonGuard AI — Penasihat Penyakit <button onclick="setBackendURL()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:18px;margin-left:8px;" title="Configure Backend URL">⚙️</button></h1>
+    <h1>🍈 MelonGuard AI — Penasihat Penyakit <button onclick="setBackendURL()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:14px;margin-left:8px;" title="Configure Backend URL">⚙️</button></h1>
     <p>Tanya soalan tentang penyakit rock melon. (BM/EN)</p>
   </header>
 
-  <!-- Camera Controller Placeholder -->
-  <div id="camera-controller-placeholder" style="background: #e8f5e9; padding: 15px; text-align: center; border-bottom: 2px dashed #81c784; color: #2E7D32; font-size: 14px; font-weight: 600;">
-    [ Space reserved for Camera Controller (Up, Down, Left, Right) ]
-  </div>
-
-  <!-- Scan Summary Controls -->
-  <div id="scan-controls" style="background: #e8f5e9; padding: 10px; text-align: center; border-bottom: 1px solid #c8e6c9;">
-    <button id="btn-scan-start" onclick="startScan()" style="padding: 8px 16px; background: #2E7D32; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">▶ Start Line Scan</button>
-    <button id="btn-scan-stop" onclick="stopScan()" style="padding: 8px 16px; background: #d32f2f; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; display: none;">⏹ End Scan & Show Summary</button>
-  </div>
-  
-  <!-- Scan Summary Results Panel (Hidden by default) -->
-  <div id="scan-summary-panel" style="display: none; background: #fff; padding: 15px; border-bottom: 1px solid #e0e0e0; text-align: left;">
-    <h3 style="color: #2E7D32; margin-top: 0; margin-bottom: 10px; font-size: 16px;">📊 Line Scan Summary Report</h3>
-    <div id="scan-summary-content" style="font-size: 14px; color: #333;"></div>
-    <button onclick="document.getElementById('scan-summary-panel').style.display='none'" style="margin-top: 10px; padding: 5px 10px; cursor: pointer; background: #f0f0f0; border: 1px solid #ccc; border-radius: 4px;">Close Summary</button>
-  </div>
-
-  <!-- Tabs -->
-  <div class="tabs">
-    <button id="btn-chat" class="tab-btn active" onclick="switchTab('chat')">💬 AI Chatbot</button>
-    <button id="btn-camera" class="tab-btn" onclick="switchTab('camera')">📹 Live Camera & Alerts</button>
-  </div>
-
-  <div id="tab-chat" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
-    <!-- Shortcut disease buttons -->
-    <div class="shortcuts">
-      <button class="sc-btn" onclick="quickDisease('leaf borer or miner')">Ulat Pelombong Daun</button>
-      <button class="sc-btn" onclick="quickDisease('downy mildew with yellow angular spots')">Embun Perosak</button>
-      <button class="sc-btn" onclick="quickDisease('powdery mildew')">Embun Tepung</button>
-      <button class="sc-btn" onclick="quickSend('Apakah racun yang boleh saya beli di Malaysia untuk merawat penyakit ini?')">Cadangan Racun</button>
-      <button class="sc-btn" onclick="quickSend('Bagi saya jadual spray untuk 30 hari')">Jadual Spray</button>
-    </div>
-
-    <!-- Chat messages -->
-    <div id="messages">
-      <!-- Welcome -->
-      <div class="msg-row bot">
-        <div class="msg-label">MelonGuard AI</div>
-        <div class="bubble">
-          <strong>Selamat datang! 🌱</strong><br><br>
-          Saya boleh bantu anda:
-          <ul>
-            <li>Kenal pasti penyakit daripada simptom daun</li>
-            <li>Cadangkan racun dan dos yang betul</li>
-            <li>Buat jadual spray rawatan</li>
-            <li>Nasihat cara pencegahan untuk ladang anda</li>
-            <li>Analisa gambar daun yang anda upload</li>
-          </ul>
-          <br>
-          Huraikan simptom anda, atau upload gambar daun untuk bermula.
+  <div class="dashboard-body" style="display: flex; flex: 1; overflow: hidden; background: #fff;">
+    
+    <!-- Left Column: Hardware Panel (1/4) -->
+    <div class="hardware-sidebar" style="width: 25%; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; background: #fdfdfd; overflow-y: auto;">
+      <!-- Hardware Control Panel -->
+      <div id="hardware-panel" class="hw-panel" style="flex-shrink: 0; padding-bottom: 10px;">
+        <div class="hw-topbar" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 10px;">
+          <div class="hw-status-group" style="justify-content: space-between;">
+            <span style="font-size:13px; font-weight:bold;">Hardware Panel</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div id="hw-dot" class="hw-dot red"></div>
+              <span id="hw-status-text" style="font-size:11px;">disconnected</span>
+            </div>
+          </div>
+          <div class="hw-port-group" style="flex-wrap: wrap; gap: 4px;">
+            <input type="text" id="hw-port" list="hw-ports" value="/dev/ttyTHS1" style="width: 48%; padding:4px;">
+            <select id="hw-baud" style="width: 48%; padding:4px;">
+              <option value="9600">9600</option>
+              <option value="115200" selected>115200</option>
+            </select>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="hw-btn connect" style="flex: 1; padding: 6px;" onclick="hwConnect()">🔗 Connect</button>
+            <button class="hw-btn disconnect" style="flex: 1; padding: 6px;" onclick="hwDisconnect()">✂️ Disconnect</button>
+          </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Image preview -->
-    <div id="img-preview-area">
-      <div id="img-preview-wrap">
-        <img id="img-preview" src="" alt="Gambar daun">
-        <button id="img-clear" onclick="clearImage()" title="Buang gambar">✕</button>
-      </div>
-    </div>
-
-    <!-- Disease Captures Gallery Panel -->
-    <div id="captures-panel">
-      <div class="captures-header">
-        <h4>📸 Disease Captures — Click to upload to chatbot</h4>
-        <button onclick="toggleCaptures()" title="Close">✕</button>
-      </div>
-      <div class="captures-grid" id="captures-grid">
-        <div class="captures-empty">No disease captures yet. The system will auto-capture when diseases are detected.</div>
-      </div>
-    </div>
-
-    <!-- Input -->
-    <div class="input-row">
-      <div class="input-wrapper">
-        <div class="photo-wrap">
-          <label id="photo-btn" for="file-input" title="Upload gambar daun">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-            <span id="img-badge"></span>
-          </label>
+        <div class="hw-controls-wrap" style="flex-direction: column; gap: 10px; padding: 10px;">
+          <div class="hw-controls" style="min-width: 0;">
+            <h4 style="margin-bottom:5px; padding-bottom:2px; font-size:12px;">Direction</h4>
+            <div class="hw-btn-grid" style="gap:4px;">
+              <button class="hw-action-btn" style="padding:4px; font-size:11px;" onclick="hwSend('l')">← Left</button>
+              <button class="hw-action-btn" style="padding:4px; font-size:11px;" onclick="hwSend('r')">→ Right</button>
+              <button class="hw-action-btn" style="padding:4px; font-size:11px;" onclick="hwSend('s')">⏱ Start</button>
+              <button class="hw-action-btn" style="padding:4px; font-size:11px;" onclick="hwSend('q')">❓ Query</button>
+            </div>
+            <div style="margin-top:8px;text-align:center;">
+              <label class="hw-toggle" style="width:30px; height:16px;">
+                <input type="checkbox" id="hw-auto" onchange="hwToggleAuto()">
+                <span class="hw-slider"></span>
+              </label>
+              <span style="font-size:11px; font-weight:600; margin-left:6px; vertical-align:middle;">Auto Tracking</span>
+            </div>
+          </div>
+          <div class="hw-speed" style="min-width: 0;">
+            <h4 style="margin-bottom:5px; padding-bottom:2px; font-size:12px;">Speed: <span id="hw-speed-num" style="color:#43A047">75</span></h4>
+            <input type="range" id="hw-speed-range" min="50" max="250" step="1" value="75" style="margin:5px 0; height:4px; width: 100%;" oninput="document.getElementById('hw-speed-num').innerText=this.value; updateSpeedColor(this.value)">
+            <button class="hw-action-btn speed-btn" style="padding:4px; font-size:11px;" onclick="hwSend('s' + document.getElementById('hw-speed-range').value)">▶ Send Speed</button>
+          </div>
+          <div class="hw-log-section" style="min-width: 0;">
+            <h4 style="margin-bottom:5px; padding-bottom:2px; font-size:12px;">Rail Log <button class="hw-clear-btn" onclick="hwClearLog()">🗑</button></h4>
+            <div id="hw-log" class="hw-log" style="height: 150px; font-size:9px; padding:4px;"></div>
+          </div>
         </div>
-        <button id="captures-toggle-btn" onclick="toggleCaptures()" title="Browse disease captures">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-          <span id="capture-count-badge">0</span>
-        </button>
-        <input type="file" id="file-input" accept="image/*" onchange="handleImageUpload(event)">
-        <textarea id="chat-input"
-          placeholder="Tulis simptom anda di sini..."
-          rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-        <button id="send-btn" onclick="sendMessage()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-        </button>
-      </div>
-    </div>
-  </div><!-- end tab-chat -->
+      </div> <!-- end hardware panel -->
+    </div> <!-- end hardware-sidebar -->
 
-  <div id="tab-camera" style="display: none; flex-direction: row; flex: 1; overflow: hidden;">
-    <!-- Left: Live Video Feed -->
-    <div class="camera-left">
-      <h3>📹 Live Rail Camera Feed</h3>
-      <p>Streaming from Python CV Pipeline</p>
-      <img id="live-video" src="" alt="Live Camera Feed Not Connected" onerror="this.alt='Pipeline Server not running or URL incorrect.'">
-    </div>
-    <!-- Right: Scrolling Detection Log -->
-    <div class="camera-right">
-      <div class="camera-right-header">
-        <h3>🚨 Real-time Detections</h3>
-        <p>Auto-scrolling detection log</p>
+    <!-- Right Column: Tabs and Content (3/4) -->
+    <div class="main-content" style="width: 75%; display: flex; flex-direction: column; overflow: hidden; background: #fff;">
+       
+      <!-- Scan Summary Controls -->
+      <div id="scan-controls" style="background: #e8f5e9; padding: 10px; text-align: center; border-bottom: 1px solid #c8e6c9; flex-shrink: 0;">
+        <button id="btn-scan-start" onclick="startScan()" style="padding: 8px 16px; background: #2E7D32; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">▶ Start Line Scan</button>
+        <button id="btn-scan-stop" onclick="stopScan()" style="padding: 8px 16px; background: #d32f2f; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; display: none;">⏹ End Scan & Show Summary</button>
       </div>
-      <div id="alert-list">
-        <p style="font-size: 13px; color: #999; text-align: center; padding: 30px 10px;">No alerts yet. System is monitoring...</p>
+      
+      <!-- Scan Summary Results Panel -->
+      <div id="scan-summary-panel" style="display: none; background: #fff; padding: 15px; border-bottom: 1px solid #e0e0e0; text-align: left; flex-shrink: 0;">
+        <h3 style="color: #2E7D32; margin-top: 0; margin-bottom: 10px; font-size: 16px;">📊 Line Scan Summary Report</h3>
+        <div id="scan-summary-content" style="font-size: 14px; color: #333;"></div>
+        <button onclick="document.getElementById('scan-summary-panel').style.display='none'" style="margin-top: 10px; padding: 5px 10px; cursor: pointer; background: #f0f0f0; border: 1px solid #ccc; border-radius: 4px;">Close Summary</button>
       </div>
-    </div>
-  </div><!-- end tab-camera -->
 
+      <!-- Tabs Nav -->
+      <div class="tabs" style="display: flex; background: #fff; border-bottom: 1px solid #e0e0e0; flex-shrink: 0;">
+        <button id="btn-chat" class="tab-btn active" onclick="switchTab('chat')">💬 AI Chatbot</button>
+        <button id="btn-camera" class="tab-btn" onclick="switchTab('camera')">📹 Live Camera & Alerts</button>
+      </div>
+
+      <!-- AI Chatbot Tab -->
+      <div id="tab-chat" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; background: #fafafa;">
+        <!-- Shortcut disease buttons -->
+        <div class="shortcuts" style="padding: 8px; gap:4px; display: flex; flex-wrap: wrap;">
+          <button class="sc-btn" style="font-size: 11px; padding: 6px 10px;" onclick="quickDisease('leaf borer or miner')">Ulat Pelombong</button>
+          <button class="sc-btn" style="font-size: 11px; padding: 6px 10px;" onclick="quickDisease('downy mildew')">Embun Perosak</button>
+          <button class="sc-btn" style="font-size: 11px; padding: 6px 10px;" onclick="quickDisease('powdery mildew')">Embun Tepung</button>
+          <button class="sc-btn" style="font-size: 11px; padding: 6px 10px;" onclick="quickSend('Apakah racun yang boleh saya beli di Malaysia untuk merawat penyakit ini?')">Cadangan Racun</button>
+          <button class="sc-btn" style="font-size: 11px; padding: 6px 10px;" onclick="quickSend('Bagi saya jadual spray untuk 30 hari')">Jadual Spray</button>
+        </div>
+
+        <!-- Chat messages -->
+        <div id="messages" style="padding: 10px; flex: 1; overflow-y: auto;">
+          <!-- Welcome -->
+          <div class="msg-row bot">
+            <div class="msg-label" style="font-size:10px;">MelonGuard AI</div>
+            <div class="bubble" style="font-size: 13px; padding: 10px;">
+              <strong>Selamat datang! 🌱</strong><br><br>
+              Saya boleh bantu anda:<br>
+              • Kenal pasti penyakit daripada simptom daun<br>
+              • Cadangkan racun dan dos yang betul<br>
+              • Buat jadual spray rawatan<br>
+              • Nasihat cara pencegahan untuk ladang anda<br>
+              • Analisa gambar daun yang anda upload<br><br>
+              Huraikan simptom anda, atau upload gambar.
+            </div>
+          </div>
+        </div>
+
+        <!-- Image preview -->
+        <div id="img-preview-area">
+          <div id="img-preview-wrap">
+            <img id="img-preview" src="" alt="Gambar daun">
+            <button id="img-clear" onclick="clearImage()" title="Buang gambar">✕</button>
+          </div>
+        </div>
+
+        <!-- Disease Captures Gallery Panel -->
+        <div id="captures-panel">
+          <div class="captures-header">
+            <h4 style="font-size:11px;">📸 Captures</h4>
+            <button onclick="toggleCaptures()" title="Close">✕</button>
+          </div>
+          <div class="captures-grid" id="captures-grid">
+            <div class="captures-empty">No disease captures yet.</div>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="input-row" style="padding: 10px;">
+          <div class="input-wrapper" style="flex-wrap: nowrap; padding:4px;">
+            <div class="photo-wrap">
+              <label id="photo-btn" for="file-input" title="Upload gambar daun" style="padding: 6px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <span id="img-badge"></span>
+              </label>
+            </div>
+            <button id="captures-toggle-btn" onclick="toggleCaptures()" title="Browse captures" style="padding: 6px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              <span id="capture-count-badge">0</span>
+            </button>
+            <input type="file" id="file-input" accept="image/*" onchange="handleImageUpload(event)">
+            <textarea id="chat-input"
+              placeholder="Tulis simptom..."
+              rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)" style="font-size: 14px; padding: 6px; min-height:40px;"></textarea>
+            <button id="send-btn" onclick="sendMessage()" style="width:36px; height:36px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </div>
+        </div>
+      </div> <!-- end chatbot tab -->
+
+      <!-- Live Camera Feed Tab -->
+      <div id="tab-camera" style="display: none; flex-direction: row; flex: 1; overflow: hidden;">
+        <div class="camera-left" style="flex:1; display:flex; flex-direction:column; background:#0a0a0a; padding:10px; align-items:center; justify-content:center;">
+          <h3 style="color:#ccc; font-size:14px; margin-bottom:8px;">📹 Live Rail Camera Feed</h3>
+          <img id="live-video" src="" alt="Live Camera Feed Not Connected" style="max-width:100%; max-height:100%; border-radius:10px; object-fit:contain;" onerror="this.alt='Pipeline Server not running.'">
+        </div>
+        <div class="camera-right" style="width: 30%; background:#fff; border-left:1px solid #eee; display:flex; flex-direction:column;">
+          <div class="camera-right-header" style="padding:10px; border-bottom:1px solid #eee;">
+            <h3 style="color:#d32f2f; font-size:14px;">🚨 Real-time Detections</h3>
+            <p style="font-size:10px; color:#999;">Auto-scrolling detection log</p>
+          </div>
+          <div id="alert-list" style="flex:1; overflow-y:auto; padding:10px;">
+            <p style="font-size: 13px; color: #999; text-align: center; padding: 30px 10px;">No alerts yet.</p>
+          </div>
+        </div>
+      </div> <!-- end camera tab -->
+
+    </div> <!-- end main-content -->
+  </div> <!-- end dashboard-body -->
 </div> <!-- end app-container -->
 
 <div id="toast"></div>
@@ -565,6 +652,84 @@ function setBackendURL() {
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("live-video").src = `${CV_BACKEND_URL}/video_feed`;
 });
+
+// --- Hardware Controller Functions ---
+let hwStatusInterval;
+
+function updateSpeedColor(val) {
+  const num = document.getElementById("hw-speed-num");
+  if(val < 100) num.style.color = "#43A047";
+  else if(val < 150) num.style.color = "#F57C00";
+  else num.style.color = "#d32f2f";
+}
+
+async function hwConnect() {
+  const port = document.getElementById('hw-port').value;
+  const baud = document.getElementById('hw-baud').value;
+  try {
+    const res = await fetch(`${CV_BACKEND_URL}/api/hardware/connect`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({port, baud})
+    });
+    if(!hwStatusInterval) hwStatusInterval = setInterval(hwFetchStatus, 1000);
+  } catch(e) { console.error("HW Connect error:", e); }
+}
+
+async function hwDisconnect() {
+  try {
+    await fetch(`${CV_BACKEND_URL}/api/hardware/disconnect`, {method: 'POST'});
+  } catch(e) { console.error("HW Disconnect error:", e); }
+}
+
+async function hwSend(cmd) {
+  try {
+    await fetch(`${CV_BACKEND_URL}/api/hardware/send`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({cmd})
+    });
+  } catch(e) { console.error("HW Send error:", e); }
+}
+
+async function hwToggleAuto() {
+  try {
+    await fetch(`${CV_BACKEND_URL}/api/hardware/toggle_auto`, {method: 'POST'});
+  } catch(e) { console.error("HW Toggle error:", e); }
+}
+
+function hwClearLog() {
+  document.getElementById('hw-log').innerHTML = '';
+}
+
+async function hwFetchStatus() {
+  try {
+    const res = await fetch(`${CV_BACKEND_URL}/api/hardware/status`);
+    if(res.ok) {
+      const data = await res.json();
+      const statusText = document.getElementById('hw-status-text');
+      const dot = document.getElementById('hw-dot');
+      statusText.innerText = data.serial_status;
+      if (data.serial_status.includes('connected')) {
+        dot.className = 'hw-dot green';
+      } else {
+        dot.className = 'hw-dot red';
+      }
+      
+      document.getElementById('hw-auto').checked = data.auto_control;
+      
+      const logDiv = document.getElementById('hw-log');
+      logDiv.innerHTML = data.rail_logs.map(log => `<div>${log}</div>`).join('');
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+  } catch(e) {
+    document.getElementById('hw-status-text').innerText = 'offline';
+    document.getElementById('hw-dot').className = 'hw-dot red';
+  }
+}
+// Start polling for HW status automatically
+hwStatusInterval = setInterval(hwFetchStatus, 2000);
+
 
 
 // Build RAG context string
